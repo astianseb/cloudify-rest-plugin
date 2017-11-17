@@ -42,7 +42,6 @@ def _send_request(url, method, headers, payload):
     if port == -1:
         port = 443 if ssl else 80
     for i, host in enumerate(ctx.node.properties['hosts']):
-        ctx.logger.info('i {}  host {}'.format(i,host))
         full_url = '{}://{}:{}{}'.format('https' if ssl else 'http', host, port, url)
         ctx.logger.debug('full_url'.format(full_url))
         try:
