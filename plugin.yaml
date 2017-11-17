@@ -1,0 +1,49 @@
+plugins:
+  # Name could be anything, this name is what appears on the beginning of operation
+  # mappings.
+  rest_plugin:
+    executor: central_deployment_agent
+    source: https://github.com/cloudify-cosmo/cloudify-rest-plugin/archive/master.zip
+    package_name: cloudify-rest-plugin
+    package_version: '0.0.1'
+
+node_types:
+
+  cloudify.rest.Request:
+    derived_from: cloudify.nodes.Root
+    properties:
+      host:
+        description: >
+          list of hosts name or IP addresses of Rest Servers
+        default: []
+      port:
+        description: >
+          port number. When -1 default ports are used (80 for ssl = false and 443 for ssl = true)
+        type: integer
+        default: -1
+      ssl:
+        description: >
+          http or https
+        type: boolean
+        default: false
+      verify:
+        description: >
+          A boolean which controls whether we verify
+          the server's TLS certificate.
+        type: boolean
+        default: true
+
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          implementation: rest_plugin.rest_plugin.tasks.execute
+          inputs:
+            params:
+              default: {}
+        stop:
+          implementation: rest_plugin.rest_plugin.tasks.execute
+          inputs:
+            params:
+              default: {}
+            template_file:
+              default: None
