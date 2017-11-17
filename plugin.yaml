@@ -46,4 +46,4 @@ node_types:
             params:
               default: {}
             template_file:
-              default: None
+              default: ''

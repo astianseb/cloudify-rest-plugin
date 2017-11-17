@@ -23,7 +23,7 @@ from cloudify.exceptions import NonRecoverableError
 
 def execute(params, template_file, **kwargs):
     ctx.logger.debug('execute \n params : {} \n template_file : {} \n'.format(params, template_file))
-    if(template_file == None):
+    if not template_file:
         return
     template = ctx.get_resource(template_file)
     template_engine = Template(template)
@@ -38,15 +38,17 @@ def execute(params, template_file, **kwargs):
 def _send_request(url, method, headers, payload):
     ctx.logger.debug('_send_request \n   payload:{}\n url = {}'.format(payload, url))
     port = ctx.node.properties['port']
+    ssl = ctx.node.properties['ssl']
     if port == -1:
-        port = 443 if ctx.node.properties['ssl'] else 80
+        port = 443 if ssl else 80
     for i, host in enumerate(ctx.node.properties['hosts']):
-        url = '{}://{}:{}{}'.format('https' if ctx.node.properties['ssl'] else 'http',
-                                ctx.node.properties['host'], port, url)
+        ctx.logger.info('i {}  host {}'.format(i,host))
+        full_url = '{}://{}:{}{}'.format('https' if ssl else 'http', host, port, url)
+        ctx.logger.debug('full_url'.format(full_url))
         try:
-            response = requests.request(method, url, headers=headers, data=payload, verify=ctx.node.properties['verify'])
+            response = requests.request(method, full_url, headers=headers, data=payload, verify=ctx.node.properties['verify'])
         except requests.exceptions.ConnectionError:
-            ctx.logger.info('ConnectionError for host : {}'.format(host))
+            ctx.logger.debug('ConnectionError for host : {}'.format(host))
             if i == len(ctx.node.properties['hosts']) - 1:
                 raise NonRecoverableError("No host from list available")
             else:

@@ -31,7 +31,7 @@ setup(
     # This must correspond to the actual packages in the rest_plugin.
     packages=['rest_plugin'],
 
-    license='LICENSE',
+    # license='LICENSE',
     zip_safe=False,
     install_requires=[
         # Necessary dependency for developing plugins, do not remove!
