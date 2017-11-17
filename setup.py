@@ -37,8 +37,8 @@ setup(
         # Necessary dependency for developing plugins, do not remove!
         "cloudify-plugins-common>=4.1"
     ],
-    test_requires=[
-        "cloudify-dsl-parser>=4.2"
-        "nose"
-    ]
+    # test_requires=[
+    #     "cloudify-dsl-parser>=4.2"
+    #     "nose"
+    # ]
 )

@@ -12,7 +12,7 @@ node_types:
   cloudify.rest.Request:
     derived_from: cloudify.nodes.Root
     properties:
-      host:
+      hosts:
         description: >
           list of hosts name or IP addresses of Rest Servers
         default: []
