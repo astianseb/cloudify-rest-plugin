@@ -13,6 +13,6 @@
         "name" : "bed"
       }
     ],
-    "owners": ["Alice","Bob","Carol"]
+    "owners": ["Alice","Bob","Carol"],
     "file_name": "get_response1.json"
 }
