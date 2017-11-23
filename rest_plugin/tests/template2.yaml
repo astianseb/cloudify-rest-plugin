@@ -1,0 +1,22 @@
+rest_calls:
+  - url: /get
+    method: GET
+#    response_format: json  is default
+    response_translation:
+        items:
+          - colour: [owner0, colour]
+            name:   [owner0, name]
+          - {}
+          - colour: [owner2, colour]
+            name:   [owner2, name]
+        owners:
+          - []
+          - [owner1, id]
+          - [owner2, id]
+    recoverable_codes: [400]
+  - url: /v1/delete
+    method: DELETE
+    payload: >
+      Delete immediately
+    response_format: raw
+    recoverable_codes: [477]

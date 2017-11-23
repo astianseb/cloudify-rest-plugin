@@ -1,0 +1,17 @@
+{
+    "items": [
+      {
+        "colour" : "black",
+        "name" : "book"
+      },
+      {
+        "colour" : "white",
+        "name" : "board"
+      },
+      {
+        "colour" : "red",
+        "name" : "bed"
+      }
+    ],
+    "owners": ["Alice","Bob","Carol"]
+}

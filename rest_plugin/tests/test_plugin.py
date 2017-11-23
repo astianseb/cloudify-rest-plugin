@@ -12,36 +12,93 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-
-
-from os import path
+from cloudify.exceptions import RecoverableError
+from cloudify.mocks import MockCloudifyContext
+from cloudify.state import current_ctx
 import unittest
+import requests_mock
+import json
+import os
 
-from cloudify.test_utils import workflow_test
+from rest_plugin import tasks
+from mock import MagicMock
 
 
 class TestPlugin(unittest.TestCase):
+    def test_execute_http_no_exception(self):
+        _ctx = MockCloudifyContext('node_name',
+                                   properties={'hosts': ['--fake.cake--',
+                                                         'test123.test'],
+                                               'port': -1,
+                                               'ssl': False,
+                                               'verify': False},
+                                   runtime_properties={})
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        with open(os.path.join(__location__, 'template1.yaml'), 'r') as f:
+            template = f.read()
+        _ctx.get_resource = MagicMock(return_value=template)
+        current_ctx.set(_ctx)
+        params = {'USER': 'testuser'}
+        with requests_mock.mock(
+                real_http=True) as m:  # real_http to check fake uri and get ex
+            # call 1
+            m.get('http://test123.test:80/testuser/test_rest/get',
+                  json=json.load(
+                      file(os.path.join(__location__, 'get_response1.json'),
+                           'r')),
+                  status_code=200)
 
-    @workflow_test(path.join('blueprint', 'blueprint.yaml'),
-                   resources_to_copy=[(path.join('blueprint', 'rest_plugin',
-                                                 'test_plugin.yaml'),
-                                       'rest_plugin')],
-                   inputs={'test_input': 'new_test_input'})
-    def test_my_task(self, cfy_local):
-        # execute install workflow
-        """
+            def _match_request_text(request):
+                return '101' in (request.text or '')
 
-        :param cfy_local:
-        """
-        cfy_local.execute('install', task_retries=0)
+            # call 2
+            m.post('http://test123.test:80/test_rest/posts',
+                   additional_matcher=_match_request_text,
+                   request_headers={'Content-type': 'test/type'},
+                   text='resp')
 
-        # extract single node instance
-        instance = cfy_local.storage.get_node_instances()[0]
+            tasks.execute(params, 'mock_param')
+            self.assertDictEqual(
+                current_ctx.get_ctx().instance.runtime_properties,
+                {'nested_key0': u'nested_value1',
+                 'nested_key1': u'nested_value2',
+                 'id0': u'1',
+                 'id1': u'101'})
 
-        # assert runtime properties is properly set in node instance
-        self.assertEqual(instance.runtime_properties['some_property'],
-                         'new_test_input')
+    def test_execute_https_port_reco(self):
+        _ctx = MockCloudifyContext('node_name',
+                                   properties={'hosts': ['test123.test'],
+                                               'port': 12345,
+                                               'ssl': 'true',
+                                               'verify': True},
+                                   runtime_properties={})
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        with open(os.path.join(__location__, 'template2.yaml'), 'r') as f:
+            template = f.read()
+        _ctx.get_resource = MagicMock(return_value=template)
+        current_ctx.set(_ctx)
+        with requests_mock.mock() as m:
+            # call 1
+            m.get('https://test123.test:12345/get',
+                  json=json.load(
+                      file(os.path.join(__location__, 'get_response2.json'),
+                           'r')),
+                  status_code=200)
 
-        # assert deployment outputs are ok
-        self.assertDictEqual(cfy_local.outputs(),
-                             {'test_output': 'new_test_input'})
+            # call 2
+            m.delete('https://test123.test:12345/v1/delete',
+                     text='resp',
+                     status_code=477)
+            with self.assertRaises(RecoverableError) as context:
+                tasks.execute({}, 'mock_param')
+            self.assertTrue(
+                'Response code 477 defined as '
+                'recoverable' in context.exception)
+
+            self.assertDictEqual(
+                current_ctx.get_ctx().instance.runtime_properties,
+                {'owner1': {'id': 'Bob'},
+                 'owner2': {'colour': 'red', 'name': 'bed', 'id': 'Carol'},
+                 'owner0': {'colour': 'black', 'name': 'book'}})

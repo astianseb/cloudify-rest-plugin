@@ -35,12 +35,35 @@ node_types:
 
     interfaces:
       cloudify.interfaces.lifecycle:
+        create:
+          implementation: rest_plugin.rest_plugin.tasks.execute
+          inputs:
+            params:
+              default: {}
+            template_file:
+              default: ''
+        configure:
+          implementation: rest_plugin.rest_plugin.tasks.execute
+          inputs:
+            params:
+              default: {}
+            template_file:
+              default: ''
         start:
           implementation: rest_plugin.rest_plugin.tasks.execute
           inputs:
             params:
               default: {}
+            template_file:
+              default: ''
         stop:
+          implementation: rest_plugin.rest_plugin.tasks.execute
+          inputs:
+            params:
+              default: {}
+            template_file:
+              default: ''
+        delete:
           implementation: rest_plugin.rest_plugin.tasks.execute
           inputs:
             params:
