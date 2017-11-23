@@ -5,3 +5,4 @@ git+https://github.com/cloudify-cosmo/cloudify-plugins-common@4.1#egg=cloudify-p
 testtools
 mock
 requests-mock
+PyYAML

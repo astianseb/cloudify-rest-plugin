@@ -1,0 +1,18 @@
+rest_calls:
+  - url: /Cloudify-PS/cloudify-rest-plugin/master/rest_plugin/tests/get_response2.json
+    method: GET
+#    response_format: json  is default
+    response_translation:
+        items:
+          - colour: [owner0, colour]
+            name:   [owner0, name]
+          - {}
+          - colour: [owner2, colour]
+            name:   [owner2, name]
+        owners:
+          - []
+          - [owner1, id]
+          - [owner2, id]
+    recoverable_codes: [400]
+    response_expectation:
+      - ['items',1,'colour',"white|grey"]
