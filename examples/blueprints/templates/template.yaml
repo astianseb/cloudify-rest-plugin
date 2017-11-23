@@ -1,18 +1,33 @@
 rest_calls:
-  - url: /Cloudify-PS/cloudify-rest-plugin/master/rest_plugin/tests/get_response2.json
+  - url: /Cloudify-PS/cloudify-rest-plugin/{{BRANCH}}/rest_plugin/tests/get_response2.json
     method: GET
 #    response_format: json  is default
+    # structure which defines how to map values from json response to
+    # node runtime properties.
     response_translation:
         items:
-          - colour: [owner0, colour]
+          - '{{property}}': [owner0, colour]
             name:   [owner0, name]
           - {}
-          - colour: [owner2, colour]
+          - '{{property}}': [owner2, colour]
             name:   [owner2, name]
         owners:
           - []
           - [owner1, id]
           - [owner2, id]
+        file_name: [file_name]
+
+    # list of response error codes (from 400 to 599) which will not stop processing template
+    # but a node recovery procedure will be performed
     recoverable_codes: [400]
+
+    # list of lists (more than one value needs checked) or simple list where elements (except last one)
+    # represents path to json value and last element is a regexp pattern to match with
     response_expectation:
       - ['items',1,'colour',"white|grey"]
+
+
+  - url: /Cloudify-PS/cloudify-rest-plugin/{{BRANCH}}/rest_plugin/tests/{{file_name}}
+    method: GET
+    response_format: raw   #for raw translation and expectation not available
+    recoverable_codes: [405,505]

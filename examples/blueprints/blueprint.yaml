@@ -1,0 +1,29 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/4.2/types.yaml
+  - https://raw.githubusercontent.com/Cloudify-PS/cloudify-rest-plugin/master/plugin.yaml
+
+
+
+node_templates:
+  rest_request1:
+    type: cloudify.rest.Request
+    properties:
+      #  list of alternative hosts where request will be sent if previous
+      #  host is not available
+      hosts: ['fake.bake.shake','raw.githubusercontent.com']
+      ssl: true
+    interfaces:
+            cloudify.interfaces.lifecycle:
+                start:
+                    inputs:
+                        template_file: templates/template.yaml
+                        #  params to render template with calls
+                        #  when paticular call (from templete) is finished
+                        #  this params are updated with a node runtime properties
+                        params:
+                          BRANCH: master
+                          property: colour
+
+
