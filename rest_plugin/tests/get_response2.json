@@ -14,5 +14,6 @@
       }
     ],
     "owners": ["Alice","Bob","Carol"],
+//  properties for example blueprint
     "file_name": "get_response1.json"
 }
