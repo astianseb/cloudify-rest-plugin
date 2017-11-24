@@ -3,7 +3,6 @@ plugins:
   # mappings.
   rest_plugin:
     executor: central_deployment_agent
-    source: https://github.com/cloudify-cosmo/cloudify-rest-plugin/archive/master.zip
     package_name: cloudify-rest-plugin
     package_version: '0.0.1'
 
