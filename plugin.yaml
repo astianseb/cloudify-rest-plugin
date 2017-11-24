@@ -9,7 +9,7 @@ plugins:
 
 node_types:
 
-  cloudify.rest.Request:
+  cloudify.rest.Requests:
     derived_from: cloudify.nodes.Root
     properties:
       hosts:

@@ -8,7 +8,7 @@ imports:
 
 node_templates:
   rest_request1:
-    type: cloudify.rest.Request
+    type: cloudify.rest.Requests
     properties:
       #  list of alternative hosts where request will be sent if previous
       #  host is not available
