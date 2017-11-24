@@ -20,25 +20,18 @@ from setuptools import setup
 
 setup(
 
-    # Do not use underscores in the rest_plugin name.
+    # Do not use underscores in the name.
     name='cloudify-rest-plugin',
 
     version='0.0.1',
     author='Grzegorz Kisiel',
     author_email='grzegorz.kisiel@cloudify.co',
     description='Generic rest plugin',
-
-    # This must correspond to the actual packages in the rest_plugin.
     packages=['rest_plugin'],
-
-    # license='LICENSE',
+    license='LICENSE',
     zip_safe=False,
     install_requires=[
-        # Necessary dependency for developing plugins, do not remove!
-        "cloudify-plugins-common>=4.1"
-    ],
-    # test_requires=[
-    #     "cloudify-dsl-parser>=4.2"
-    #     "nose"
-    # ]
+        "cloudify-plugins-common>=4.2",
+        "PyYAML"
+    ]
 )
