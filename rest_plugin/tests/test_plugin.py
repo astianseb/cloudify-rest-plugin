@@ -58,13 +58,23 @@ class TestPlugin(unittest.TestCase):
                    request_headers={'Content-type': 'test/type'},
                    text='resp')
 
+            # call 1
+            m.get('http://test123.test:80/get',
+                  json=json.load(
+                      file(os.path.join(__location__, 'get_response2.json'),
+                           'r')),
+                  status_code=200)
+
             tasks.execute(params, 'mock_param')
             self.assertDictEqual(
                 current_ctx.get_ctx().instance.runtime_properties,
                 {'nested_key0': u'nested_value1',
                  'nested_key1': u'nested_value2',
                  'id0': u'1',
-                 'id1': u'101'})
+                 'id1': u'101',
+                 'owner1': {'id': 'Bob'},
+                 'owner2': {'colour': 'red', 'name': 'bed', 'id': 'Carol'},
+                 'owner0': {'colour': 'black', 'name': 'book'}})
 
     def test_execute_https_port_reco(self):
         _ctx = MockCloudifyContext('node_name',
@@ -80,25 +90,11 @@ class TestPlugin(unittest.TestCase):
         _ctx.get_resource = MagicMock(return_value=template)
         current_ctx.set(_ctx)
         with requests_mock.mock() as m:
-            # call 1
-            m.get('https://test123.test:12345/get',
-                  json=json.load(
-                      file(os.path.join(__location__, 'get_response2.json'),
-                           'r')),
-                  status_code=200)
-
-            # call 2
             m.delete('https://test123.test:12345/v1/delete',
                      text='resp',
                      status_code=477)
             with self.assertRaises(RecoverableError) as context:
                 tasks.execute({}, 'mock_param')
             self.assertTrue(
-                'Response code 477 defined as '
-                'recoverable' in context.exception)
-
-            self.assertDictEqual(
-                current_ctx.get_ctx().instance.runtime_properties,
-                {'owner1': {'id': 'Bob'},
-                 'owner2': {'colour': 'red', 'name': 'bed', 'id': 'Carol'},
-                 'owner0': {'colour': 'black', 'name': 'book'}})
+                'Response code 477 '
+                'defined as recoverable' in context.exception.message)

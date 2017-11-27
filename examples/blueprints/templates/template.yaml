@@ -26,8 +26,8 @@ rest_calls:
     response_expectation:
       - ['items',1,'colour',"white|grey"]
 
-
+    #file_name is taken from runtime property created by previous call
   - url: /Cloudify-PS/cloudify-rest-plugin/{{BRANCH}}/rest_plugin/tests/{{file_name}}
     method: GET
-    response_format: raw   #for raw translation and expectation not available
+    response_format: raw   #for raw format a translation and an expectation not available
     recoverable_codes: [405,505]
