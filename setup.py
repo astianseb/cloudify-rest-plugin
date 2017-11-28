@@ -27,7 +27,7 @@ setup(
     author='Grzegorz Kisiel',
     author_email='grzegorz.kisiel@cloudify.co',
     description='Generic rest plugin',
-    packages=['rest_plugin'],
+    packages=['rest_plugin','rest_plugin.test_123'],
     license='LICENSE',
     zip_safe=False,
     install_requires=[

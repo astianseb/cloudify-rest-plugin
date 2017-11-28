@@ -16,7 +16,6 @@
 import traceback
 from cloudify import ctx
 from cloudify.exceptions import NonRecoverableError, RecoverableError
-from rest_sdk import utility, exceptions
 
 
 def execute(params, template_file, **kwargs):
@@ -26,11 +25,7 @@ def execute(params, template_file, **kwargs):
         return
     try:
         template = ctx.get_resource(template_file)
-        ctx.instance.runtime_properties.update(
-            utility.process(params, template, ctx.node.properties.copy()))
-    except (exceptions.ExpectationException,
-            exceptions.RecoverebleStatusCodeCodeException)as e:
-        raise RecoverableError(e)
+        ctx.logger.error('!!! works !!!'*10)
     except Exception as e:
         ctx.logger.info(
             'Exception traceback : {}'.format(traceback.format_exc()))
