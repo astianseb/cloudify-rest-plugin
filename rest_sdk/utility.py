@@ -119,6 +119,7 @@ def _process_response(response, call, store_props):
             "Only json or raw response_format is supported".format(
                 response_format))
 
+
 def _check_expectation(json, expectation, unexpectation=False):
     logger.debug(
         '_check_expectation \n json:{}\n '

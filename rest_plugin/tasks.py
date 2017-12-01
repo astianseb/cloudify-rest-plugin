@@ -26,8 +26,11 @@ def execute(params, template_file, **kwargs):
         ctx.logger.debug(
             'Processing finished. No template file provide to method')
         return
+    if not params:
+        params = {}
+    template = ctx.get_resource(template_file)
+    params.update(ctx.instance.runtime_properties)
     try:
-        template = ctx.get_resource(template_file)
         ctx.instance.runtime_properties.update(
             utility.process(params, template, ctx.node.properties.copy()))
     except (exceptions.ExpectationException,
