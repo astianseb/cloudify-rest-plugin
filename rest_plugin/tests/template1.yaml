@@ -1,5 +1,5 @@
 rest_calls:
-  - url: /{{USER}}/test_rest/get
+  - path: /{{USER}}/test_rest/get
     method: GET
     response_format: json
     response_translation:
@@ -16,7 +16,7 @@ rest_calls:
       - [0,'status',"active|ready"]
       - [1,'status','activating']
 
-  - url: /test_rest/posts
+  - path: /test_rest/posts
     method: POST
     headers: {
       Content-type : test/type
@@ -25,7 +25,7 @@ rest_calls:
       {{id1}}
     response_format: raw
 
-  - url: /get
+  - path: /get
     method: GET
 #    response_format: json  is default
     response_translation:

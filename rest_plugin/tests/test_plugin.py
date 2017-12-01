@@ -12,7 +12,7 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-from cloudify.exceptions import RecoverableError
+from cloudify.exceptions import RecoverableError, NonRecoverableError
 from cloudify.mocks import MockCloudifyContext
 from cloudify.state import current_ctx
 import unittest
@@ -22,6 +22,7 @@ import os
 
 from rest_plugin import tasks
 from mock import MagicMock
+import logging
 
 
 class TestPlugin(unittest.TestCase):
@@ -38,6 +39,7 @@ class TestPlugin(unittest.TestCase):
         with open(os.path.join(__location__, 'template1.yaml'), 'r') as f:
             template = f.read()
         _ctx.get_resource = MagicMock(return_value=template)
+        _ctx.logger.setLevel(logging.DEBUG)
         current_ctx.set(_ctx)
         params = {'USER': 'testuser'}
         with requests_mock.mock(
@@ -98,3 +100,57 @@ class TestPlugin(unittest.TestCase):
             self.assertTrue(
                 'Response code 477 '
                 'defined as recoverable' in context.exception.message)
+
+    def test_execute_overwrite_host_resposnse_expecation(self):
+        _ctx = MockCloudifyContext('node_name',
+                                   properties={'hosts': ['test123.test'],
+                                               'port': 12345,
+                                               'ssl': 'true',
+                                               'verify': True},
+                                   runtime_properties={})
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        with open(os.path.join(__location__, 'template3.yaml'), 'r') as f:
+            template = f.read()
+        _ctx.get_resource = MagicMock(return_value=template)
+        _ctx.logger.setLevel(logging.DEBUG)
+        current_ctx.set(_ctx)
+        with requests_mock.mock() as m:
+            m.put('https://hostfrom%20template.test:12345/v1/put_%20response3',
+                  json=json.load(
+                      file(os.path.join(__location__, 'put_response3.json'),
+                           'r')),
+                  status_code=200)
+            with self.assertRaises(RecoverableError) as context:
+                tasks.execute({}, 'mock_param')
+            self.assertSequenceEqual(
+                'Response value "wrong_value" does not match regexp '
+                '"proper_value|good" from response_expectation',
+                str(context.exception.message))
+
+    def test_execute_payload_json_resposnse_unexpecation(self):
+        _ctx = MockCloudifyContext('node_name',
+                                   properties={'hosts': ['test123.test'],
+                                               'port': 12345,
+                                               'ssl': 'true',
+                                               'verify': True},
+                                   runtime_properties={})
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        with open(os.path.join(__location__, 'template4.yaml'), 'r') as f:
+            template = f.read()
+        _ctx.get_resource = MagicMock(return_value=template)
+        _ctx.logger.setLevel(logging.DEBUG)
+        current_ctx.set(_ctx)
+        with requests_mock.mock() as m:
+            m.put('https://test123.test:12345/v1/put_response4',
+                  json=json.load(
+                      file(os.path.join(__location__, 'put_response4.json'),
+                           'r')),
+                  status_code=200)
+            with self.assertRaises(NonRecoverableError) as context:
+                tasks.execute({}, 'mock_param')
+            self.assertSequenceEqual(
+                'Response value "wrong_value" matches regexp '
+                '"failed|wrong_value" from response_unexpectation',
+                str(context.exception.message))

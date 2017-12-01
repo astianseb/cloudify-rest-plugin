@@ -1,5 +1,5 @@
 rest_calls:
-  - url: /v1/delete
+  - path: /v1/delete
     method: DELETE
     payload: >
       Delete immediately

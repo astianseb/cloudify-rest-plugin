@@ -13,7 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-
 import yaml
 import logging
 import ast
@@ -21,8 +20,8 @@ import re
 from jinja2 import Template
 import requests
 from . import LOGGER_NAME
-from .exceptions import RecoverebleStatusCodeCodeException,\
-    ExpectationException, WrongTemplateDataException
+from .exceptions import RecoverebleStatusCodeCodeException, \
+    ExpectationException, UnExpectationException, WrongTemplateDataException
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -33,6 +32,7 @@ def process(params, template, request_props):
     template_yaml = yaml.load(template)
     result_propeties = {}
     for call in template_yaml['rest_calls']:
+        call_with_request_props = request_props.copy()
         logger.debug('call \n {}'.format(call))
         # enrich params with items stored in runtime props by prev calls
         params.update(result_propeties)
@@ -40,15 +40,16 @@ def process(params, template, request_props):
         rendered_call = template_engine.render(params)
         call = ast.literal_eval(rendered_call)
         logger.debug('rendered call \n {}'.format(call))
-
-        call.update(request_props)
-        response = _send_request(call)
+        call_with_request_props.update(call)
+        logger.info(
+            'call_with_request_props \n {}'.format(call_with_request_props))
+        response = _send_request(call_with_request_props)
         _process_response(response, call, result_propeties)
     return result_propeties
 
 
 def _send_request(call):
-    logger.debug(
+    logger.info(
         '_send_request request_props:{}'.format(call))
     port = call['port']
     ssl = call['ssl']
@@ -57,12 +58,21 @@ def _send_request(call):
     for i, host in enumerate(call['hosts']):
         full_url = '{}://{}:{}{}'.format('https' if ssl else 'http', host,
                                          port,
-                                         call['url'])
+                                         call['path'])
         logger.debug('full_url : {}'.format(full_url))
+        # check if payload can be used as json
+        if call.get('payload_format', 'json') == 'json':
+            data = None
+            json_payload = call.get('payload', None)
+        else:
+            data = call.get('payload', None)
+            json_payload = None
+
         try:
             response = requests.request(call['method'], full_url,
                                         headers=call.get('headers', None),
-                                        data=call.get('payload', None),
+                                        data=data,
+                                        json=json_payload,
                                         verify=call['verify'])
         except requests.exceptions.ConnectionError:
             logger.debug('ConnectionError for host : {}'.format(host))
@@ -72,7 +82,7 @@ def _send_request(call):
             else:
                 continue
 
-    logger.debug(
+    logger.info(
         'response \n text:{}\n status_code:{}\n'.format(response.text,
                                                         response.status_code))
     try:
@@ -86,34 +96,53 @@ def _send_request(call):
     return response
 
 
-def _check_expectation(json, response_expectation):
-    if not response_expectation:
+def _check_expectation(json, expectation, unexpectation=False):
+    logger.debug(
+        '_check_expectation \n json:{}\n '
+        'expectation:{}\n '
+        'unexpectation:{}'.format(
+            json, expectation, unexpectation))
+    if not expectation:
         return
-    if not isinstance(response_expectation, list):
+    if not isinstance(expectation, list):
         raise WrongTemplateDataException(
             "response_expectation had to be list. "
             "Type {} not supported. ".format(
-                type(response_expectation)))
-    if isinstance(response_expectation[0], list):
-        for item in response_expectation:
+                type(expectation)))
+    if isinstance(expectation[0], list):
+        for item in expectation:
             _check_expectation(json, item)
     else:
-        pattern = response_expectation.pop(-1)
-        for key in response_expectation:
+        pattern = expectation.pop(-1)
+        for key in expectation:
             json = json[key]
-        if not re.match(pattern, str(json)):
-            raise ExpectationException(
-                'Response value "{}" does not match regexp "{}" from '
-                'response_expectation'.format(
-                    json, pattern))
+        if unexpectation:
+            if re.match(pattern, str(json)):
+                raise UnExpectationException(
+                    'Response value "{}" matches regexp "{}" from '
+                    'response_unexpectation'.format(
+                        json, pattern))
+        else:
+            if not re.match(pattern, str(json)):
+                raise ExpectationException(
+                    'Response value "{}" does not match regexp "{}" from '
+                    'response_expectation'.format(
+                        json, pattern))
 
 
 def _process_response(response, call, store_props):
+    logger.debug(
+        '_process_response \n response:{}\n call:{}\n store_props:{}'.format(
+            response,
+            call, store_props))
     response_format = call.get('response_format', 'json')
 
     if response_format == 'json':
+        logger.debug('response_format json')
         json = response.json()
         _check_expectation(json, call.get('response_expectation', None))
+        _check_expectation(json, call.get('response_unexpectation', None),
+                           True)
         _translate_and_save(json, call.get('response_translation', None),
                             store_props)
     elif response_format == 'raw':

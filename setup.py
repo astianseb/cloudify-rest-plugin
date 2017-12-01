@@ -32,6 +32,6 @@ setup(
     zip_safe=False,
     install_requires=[
         "cloudify-plugins-common>=4.2",
-        "PyYAML"
+        "PyYAML", 'requests', 'jinja2'
     ]
 )

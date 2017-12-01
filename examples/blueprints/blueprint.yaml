@@ -14,6 +14,8 @@ node_templates:
       #  host is not available
       hosts: ['fake.bake.shake','raw.githubusercontent.com']
       ssl: true
+      #default port for ssl=false is 80 or 443 for true
+      #port: <port>
     interfaces:
             cloudify.interfaces.lifecycle:
                 start:
@@ -23,7 +25,7 @@ node_templates:
                         #  when paticular call (from templete) is finished
                         #  this params are updated with a node runtime properties
                         params:
-                          BRANCH: master
+                          BRANCH: 'master 1'
                           property: colour
 
 

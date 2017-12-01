@@ -22,6 +22,10 @@ class ExpectationException(RestSdkException):
     pass
 
 
+class UnExpectationException(RestSdkException):
+    pass
+
+
 class RecoverebleStatusCodeCodeException(RestSdkException):
     pass
 
