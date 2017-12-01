@@ -20,10 +20,10 @@ from rest_sdk import utility, exceptions
 
 
 def execute(params, template_file, **kwargs):
-    ctx.logger.info(
+    ctx.logger.debug(
         'execute \n params {} \n template \n'.format(params, template_file))
     if not template_file:
-        ctx.logger.info(
+        ctx.logger.debug(
             'Processing finished. No template file provide to method')
         return
     try:

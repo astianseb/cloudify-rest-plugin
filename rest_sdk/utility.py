@@ -96,40 +96,6 @@ def _send_request(call):
     return response
 
 
-def _check_expectation(json, expectation, unexpectation=False):
-    logger.debug(
-        '_check_expectation \n json:{}\n '
-        'expectation:{}\n '
-        'unexpectation:{}'.format(
-            json, expectation, unexpectation))
-    if not expectation:
-        return
-    if not isinstance(expectation, list):
-        raise WrongTemplateDataException(
-            "response_expectation had to be list. "
-            "Type {} not supported. ".format(
-                type(expectation)))
-    if isinstance(expectation[0], list):
-        for item in expectation:
-            _check_expectation(json, item)
-    else:
-        pattern = expectation.pop(-1)
-        for key in expectation:
-            json = json[key]
-        if unexpectation:
-            if re.match(pattern, str(json)):
-                raise UnExpectationException(
-                    'Response value "{}" matches regexp "{}" from '
-                    'response_unexpectation'.format(
-                        json, pattern))
-        else:
-            if not re.match(pattern, str(json)):
-                raise ExpectationException(
-                    'Response value "{}" does not match regexp "{}" from '
-                    'response_expectation'.format(
-                        json, pattern))
-
-
 def _process_response(response, call, store_props):
     logger.debug(
         '_process_response \n response:{}\n call:{}\n store_props:{}'.format(
@@ -152,6 +118,39 @@ def _process_response(response, call, store_props):
             "response_format {} is not supported. "
             "Only json or raw response_format is supported".format(
                 response_format))
+
+def _check_expectation(json, expectation, unexpectation=False):
+    logger.debug(
+        '_check_expectation \n json:{}\n '
+        'expectation:{}\n '
+        'unexpectation:{}'.format(
+            json, expectation, unexpectation))
+    if not expectation:
+        return
+    if not isinstance(expectation, list):
+        raise WrongTemplateDataException(
+            "response_expectation had to be list. "
+            "Type {} not supported. ".format(
+                type(expectation)))
+    if isinstance(expectation[0], list):
+        for item in expectation:
+            _check_expectation(json, item, unexpectation)
+    else:
+        pattern = expectation.pop(-1)
+        for key in expectation:
+            json = json[key]
+        if unexpectation:
+            if re.match(pattern, str(json)):
+                raise UnExpectationException(
+                    'Response value "{}" matches regexp "{}" from '
+                    'response_unexpectation'.format(
+                        json, pattern))
+        else:
+            if not re.match(pattern, str(json)):
+                raise ExpectationException(
+                    'Response value "{}" does not match regexp "{}" from '
+                    'response_expectation'.format(
+                        json, pattern))
 
 
 def _translate_and_save(response_json, response_translation, runtime_dict):

@@ -25,7 +25,7 @@ node_templates:
                         #  when paticular call (from templete) is finished
                         #  this params are updated with a node runtime properties
                         params:
-                          BRANCH: 'master 1'
+                          BRANCH: 'master'
                           property: colour
 
 
