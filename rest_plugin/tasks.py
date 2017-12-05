@@ -22,17 +22,35 @@ from rest_sdk import utility, exceptions
 def execute(params, template_file, **kwargs):
     ctx.logger.debug(
         'execute \n params {} \n template \n'.format(params, template_file))
-    if not template_file:
-        ctx.logger.debug(
-            'Processing finished. No template file provide to method')
-        return
+    runtime_properties = ctx.instance.runtime_properties.copy()
     if not params:
         params = {}
+    runtime_properties.update(params)
+    _execute(runtime_properties, template_file, ctx.instance, ctx.node)
+
+
+def execute_as_relationship(params, template_file, **kwargs):
+    ctx.logger.debug(
+        'execute_as_relationship \n '
+        'params {} \n template \n'.format(params, template_file))
+    if not params:
+        params = {}
+    runtime_properties = ctx.target.instance.runtime_properties.copy()
+    runtime_properties.update(ctx.source.instance.runtime_properties)
+    runtime_properties.update(params)
+    _execute(runtime_properties, template_file, ctx.source.instance,
+             ctx.source.node)
+
+
+def _execute(params, template_file, instance, node):
+    if not template_file:
+        ctx.logger.info(
+            'Processing finished. No template file provided.')
+        return
     template = ctx.get_resource(template_file)
-    params.update(ctx.instance.runtime_properties)
     try:
-        ctx.instance.runtime_properties.update(
-            utility.process(params, template, ctx.node.properties.copy()))
+        instance.runtime_properties.update(
+            utility.process(params, template, node.properties.copy()))
     except (exceptions.ExpectationException,
             exceptions.RecoverebleStatusCodeCodeException)as e:
         raise RecoverableError(e)
