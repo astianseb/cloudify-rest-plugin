@@ -17,6 +17,7 @@ import yaml
 import logging
 import ast
 import re
+import xmltodict
 from jinja2 import Template
 import requests
 from . import LOGGER_NAME
@@ -101,17 +102,22 @@ def _process_response(response, call, store_props):
         '_process_response \n response:{}\n call:{}\n store_props:{}'.format(
             response,
             call, store_props))
-    response_format = call.get('response_format', 'json')
+    response_format = call.get('response_format', 'json').upper()
 
-    if response_format == 'json':
-        logger.debug('response_format json')
-        json = response.json()
+    if re.match('JSON|XML', response_format):
+        if response_format == 'JSON':
+            logger.debug('response_format json')
+            json = response.json()
+        else: #XML
+            logger.debug('response_format xml')
+            json = xmltodict.parse(response.text)
+            logger.debug('xml transformed to dict \n{}'.format(json))
         _check_expectation(json, call.get('response_expectation', None))
         _check_expectation(json, call.get('response_unexpectation', None),
                            True)
         _translate_and_save(json, call.get('response_translation', None),
                             store_props)
-    elif response_format == 'raw':
+    elif response_format == 'RAW':
         logger.debug('no action for raw response_format')
     else:
         raise WrongTemplateDataException(

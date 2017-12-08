@@ -154,3 +154,29 @@ class TestPlugin(unittest.TestCase):
                 'Response value "wrong_value" matches regexp '
                 '"failed|wrong_value" from response_unexpectation',
                 str(context.exception.message))
+
+    def test_execute_http_xml(self):
+        _ctx = MockCloudifyContext('node_name',
+                                   properties={'hosts': ['test123.test'],
+                                               'port': -1,
+                                               'ssl': False,
+                                               'verify': False},
+                                   runtime_properties={})
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        with open(os.path.join(__location__, 'template5.yaml'), 'r') as f:
+            template = f.read()
+        _ctx.get_resource = MagicMock(return_value=template)
+        _ctx.logger.setLevel(logging.DEBUG)
+        current_ctx.set(_ctx)
+        with requests_mock.mock() as m:
+            m.get('http://test123.test:80/v1/get_response5',
+                  text=file(os.path.join(__location__, 'get_response5.xml'),
+                            'r').read(),
+                  status_code=200)
+
+            tasks.execute({}, 'mock_param')
+            self.assertDictEqual(
+                current_ctx.get_ctx().instance.runtime_properties,
+                {'UUID': '111111111111111111111111111111',
+                 'CPUID': 'ABS:FFF222777'})
