@@ -108,7 +108,7 @@ def _process_response(response, call, store_props):
         if response_format == 'JSON':
             logger.debug('response_format json')
             json = response.json()
-        else: #XML
+        else:  # XML
             logger.debug('response_format xml')
             json = xmltodict.parse(response.text)
             logger.debug('xml transformed to dict \n{}'.format(json))
@@ -145,7 +145,12 @@ def _check_expectation(json, expectation, unexpectation=False):
     else:
         pattern = expectation.pop(-1)
         for key in expectation:
-            json = json[key]
+            try:
+                json = json[key]
+            except (IndexError, KeyError):
+                if not unexpectation:
+                    raise ExpectationException(
+                        'No key or index {} in json {}'.format(key, json))
         if unexpectation:
             if re.match(pattern, str(json)):
                 raise UnExpectationException(

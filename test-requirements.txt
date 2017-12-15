@@ -6,3 +6,4 @@ testtools
 mock
 requests-mock
 PyYAML
+xmltodict
