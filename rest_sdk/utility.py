@@ -173,8 +173,16 @@ def _translate_and_save(response_json, response_translation, runtime_dict):
             else:
                 _save(runtime_dict, response_translation, response_json)
     elif isinstance(response_translation, dict):
-        for key, value in response_translation.items():
-            _translate_and_save(response_json[key], value, runtime_dict)
+        if isinstance(response_json, list):
+            list_of_paths = []
+            _collect_runtime_props_paths(response_translation, list_of_paths)
+            for path in list_of_paths:
+                _prepare_runtime_props_for_list(runtime_dict,path,len(response_json)-1)
+                for l_idx, value in enumerate(response_json):
+                    _prepare_runtime_props_path_for_list()
+        else:
+            for key, value in response_translation.items():
+                _translate_and_save(response_json[key], value, runtime_dict)
 
 
 def _save(runtime_properties_dict_or_subdict, list, value):
@@ -185,3 +193,36 @@ def _save(runtime_properties_dict_or_subdict, list, value):
         runtime_properties_dict_or_subdict[
             first_el] = runtime_properties_dict_or_subdict.get(first_el, {})
         _save(runtime_properties_dict_or_subdict[first_el], list, value)
+
+def _collect_runtime_props_paths(response_translation, paths):
+    if isinstance(response_translation, list):
+        for idx, val in enumerate(response_translation):
+            if isinstance(val, (list, dict)):
+                _collect_runtime_props_paths( val, paths)
+            else:
+                paths.append( response_translation)
+    else:
+        for key, value in response_translation.items():
+            _collect_runtime_props_paths(value, paths)
+
+def _prepare_runtime_props_path_for_list(runtime_props_path, idx):
+    path = list(runtime_props_path)
+    for l_idx, value in enumerate(path):
+        if isinstance(value,list):
+            path[l_idx]=value.pop()
+            break
+    path.insert(l_idx+1,idx)
+    return path
+
+def _prepare_runtime_props_for_list(runtime_props, runtime_props_path , count):
+    for l_idx, value in enumerate(runtime_props_path):
+        if isinstance(value,list):
+            runtime_props[value.pop()] = [None]
+            return
+        else:
+            runtime_props[value] = runtime_props.get(value,{})
+            if value == runtime_props_path[-1]:
+                runtime_props[value] = [None] * count
+            else:
+                runtime_props = runtime_props[value]
+
