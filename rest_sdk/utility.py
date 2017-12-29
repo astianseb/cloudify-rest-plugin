@@ -165,23 +165,90 @@ def _check_expectation(json, expectation, unexpectation=False):
                         json, pattern))
 
 
+def _check_if_v2(response_translation):
+    # check if response_translation is list of list of 2 elements
+    if isinstance(response_translation, list) and \
+            isinstance(response_translation[0], list) and \
+            len(response_translation[0]) == 2 and \
+            isinstance(response_translation[0][0],list) and \
+            isinstance(response_translation[0][1],list) :
+        return True
+    return False
+
+
 def _translate_and_save(response_json, response_translation, runtime_dict):
+    if _check_if_v2(response_translation):
+        _translate_and_save_v2(response_json, response_translation,
+                               runtime_dict)
+    else:
+        _translate_and_save_v1(response_json, response_translation,
+                               runtime_dict)
+def _translate_and_save_v2(response_json, response_translation, runtime_dict):
+   #print('_translate_and_save_v2 : \n {} \n{} \n{} \n'.format(response_json,response_translation,runtime_dict))
+    for translation in response_translation:
+        json = response_json
+        for idx, key in enumerate(translation[0]):
+            if isinstance(key,list):
+               #print(translation[1])
+                _prepare_runtime_props_for_list(runtime_dict,
+                                                translation[1],
+                                                len(json))
+               #print(translation[1])
+                for response_list_idx, response_list_value in enumerate(json):
+                    list_path = translation[0][idx+1:]
+                    list_path.insert(0,key[0])
+                    list_path.insert(0,response_list_idx)
+                    #print 'list_path : {}'.format(list_path)
+
+                    _translate_and_save_v2(json,[[list_path,_prepare_runtime_props_path_for_list(translation[1],response_list_idx)]],runtime_dict)
+                return
+            else:
+                json = json[key]
+        #print('save ---- \n{}\n{}\n{}\n-------'.format(runtime_dict, translation[1],json))
+        _save(runtime_dict, translation[1],json )
+
+
+def _translate_and_save_v1(response_json, response_translation, runtime_dict):
     if isinstance(response_translation, list):
         for idx, val in enumerate(response_translation):
             if isinstance(val, (list, dict)):
-                _translate_and_save(response_json[idx], val, runtime_dict)
+                _translate_and_save_v1(response_json[idx], val, runtime_dict)
             else:
                 _save(runtime_dict, response_translation, response_json)
     elif isinstance(response_translation, dict):
         for key, value in response_translation.items():
-            _translate_and_save(response_json[key], value, runtime_dict)
+            _translate_and_save_v1(response_json[key], value, runtime_dict)
 
 
 def _save(runtime_properties_dict_or_subdict, list, value):
+    print ('----- save ---- \n{}\n{}\n{}\n----------------'.format(runtime_properties_dict_or_subdict,list,value))
     first_el = list.pop(0)
     if len(list) == 0:
         runtime_properties_dict_or_subdict[first_el] = value
     else:
         runtime_properties_dict_or_subdict[
-            first_el] = runtime_properties_dict_or_subdict.get(first_el, {})
+            first_el] = runtime_properties_dict_or_subdict.get(first_el, {}) if isinstance(runtime_properties_dict_or_subdict,dict) else runtime_properties_dict_or_subdict[first_el]
         _save(runtime_properties_dict_or_subdict[first_el], list, value)
+
+def _prepare_runtime_props_path_for_list(runtime_props_path, idx):
+   #print('_prepare_runtime_props_path_for_list ---- \n{}\n{}\n---------'.format(runtime_props_path,idx))
+    path = list(runtime_props_path)
+    last_one = path[-1]
+    if isinstance(last_one,list):
+        path.pop()
+        path.append(idx)
+        path.extend(last_one)
+    else:
+        path.append(idx)
+    return path
+
+def _prepare_runtime_props_for_list(runtime_props, runtime_props_path , count):
+    for l_idx, value in enumerate(runtime_props_path):
+       #print 'l_idx : {}   value : {}'.format(l_idx,value)
+        if value == runtime_props_path[-1] or isinstance(runtime_props_path[l_idx+1],list):
+           #print(runtime_props)
+            runtime_props[value] = [{}] * count
+            return
+        else:
+            runtime_props[value] = runtime_props.get(value, {})
+            runtime_props = runtime_props[value]
