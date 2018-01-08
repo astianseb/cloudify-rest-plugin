@@ -80,7 +80,7 @@ class TestPlugin(unittest.TestCase):
 
     def test_execute_https_port_reco(self):
         _ctx = MockCloudifyContext('node_name',
-                                   properties={'hosts': ['test123.test'],
+                                   properties={'host': 'test123.test',
                                                'port': 12345,
                                                'ssl': 'true',
                                                'verify': True},

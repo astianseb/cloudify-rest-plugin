@@ -56,6 +56,8 @@ def _send_request(call):
     ssl = call['ssl']
     if port == -1:
         port = 443 if ssl else 80
+    if not call.get('hosts',None):
+        call['hosts'] = [call['host']]
     for i, host in enumerate(call['hosts']):
         full_url = '{}://{}:{}{}'.format('https' if ssl else 'http', host,
                                          port,

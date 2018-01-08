@@ -10,9 +10,15 @@ node_templates:
   rest_request1:
     type: cloudify.rest.Requests
     properties:
+
       #  list of alternative hosts where request will be sent if previous
       #  host is not available
       hosts: ['fake.bake.shake','raw.githubusercontent.com']
+
+      # if list of hosts is not needed single host can be provided by host parameters.
+      # 'hosts' parames overwirte 'host' param
+      #host: 'raw.githubusercontent.com'
+
       ssl: true
       #default port for ssl=false is 80 or 443 for true
       #port: <port>

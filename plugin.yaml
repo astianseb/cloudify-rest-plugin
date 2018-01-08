@@ -16,6 +16,12 @@ node_types:
         description: >
           list of hosts name or IP addresses of Rest Servers
         default: []
+      host:
+        description: >
+          host name or IP addresses of Rest Servers
+          if list of hosts is not needed single host can be provided by this parameters.
+          NOTE: the 'hosts' property overwirte the 'host' property
+        default: []
       port:
         description: >
           port number. When -1 default ports are used (80 for ssl = false and 443 for ssl = true)
