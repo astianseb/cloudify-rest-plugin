@@ -19,7 +19,7 @@ node_types:
       host:
         description: >
           host name or IP addresses of Rest Servers
-          if list of hosts is not needed single host can be provided by this parameters.
+          if list of hosts is not needed single host can be provided by this property.
           NOTE: the 'hosts' property overwirte the 'host' property
         default: []
       port:

@@ -15,8 +15,9 @@ node_templates:
       #  host is not available
       hosts: ['fake.bake.shake','raw.githubusercontent.com']
 
-      # if list of hosts is not needed single host can be provided by host parameters.
-      # 'hosts' parames overwirte 'host' param
+
+      # if list of hosts is not needed single host can be provided by host property.
+      # 'hosts' property overwirte 'host' property
       #host: 'raw.githubusercontent.com'
 
       ssl: true
